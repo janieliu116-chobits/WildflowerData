@@ -1,0 +1,23 @@
+kind = "mobile"
+previewPath = "/"
+title = "Wildflower"
+version = "1.0.0"
+id = "artifacts/wildflower"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/" ]
+localPort = 21984
+
+[services.development]
+run = "pnpm --filter @workspace/wildflower run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/wildflower", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/wildflower", "run", "serve" ]
+
+[services.env]
+PORT = "21984"
+BASE_PATH = "/"

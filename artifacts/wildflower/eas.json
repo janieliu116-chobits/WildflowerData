@@ -1,0 +1,36 @@
+{
+  "cli": {
+    "version": ">= 20.5.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "pnpm": "10.26.1",
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "wildflower-piny.onrender.com"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "pnpm": "10.26.1",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "wildflower-piny.onrender.com"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "pnpm": "10.26.1",
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "wildflower-piny.onrender.com"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
