@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Wildflower",
-    "slug": "wildflower",
+    "slug": "workspace",
     "version": "1.0.0",
     "icon": "./assets/images/icon.png",
     "scheme": "wildflower",
@@ -20,7 +20,9 @@
       "backgroundColor": "#13131E",
       "enableProguardInReleaseBuilds": true,
       "enableShrinkResourcesInReleaseBuilds": true,
-      "permissions": ["SCHEDULE_EXACT_ALARM"],
+      "permissions": [
+        "SCHEDULE_EXACT_ALARM"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#13131E"
@@ -71,6 +73,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "97e55203-8c02-4b87-98f2-584f7f0eaf37"
+      }
+    },
+    "owner": "janieliu116"
   }
 }

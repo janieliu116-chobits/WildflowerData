@@ -1,11 +1,45 @@
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export const NOTIF_SETTINGS_KEY = '@wildflower_notification_settings';
+export const NOTIF_PROMPTED_KEY = '@wildflower_notification_prompted';
+
+const DEFAULT_NOTIF_SETTINGS = { enabled: true, hour: 18 };
+
+// Persists the daily-reminder toggle + hour together as one JSON string.
+// AsyncStorage requires a non-null string value -- passing null/undefined
+// throws a native "bind value is null" crash, so this always serializes a
+// well-formed object, never the raw `enabled`/`hour` args directly.
+export async function saveNotificationSettings(enabled: boolean, hour: number): Promise<void> {
+  try {
+    const safeHour = Number.isFinite(hour) ? hour : DEFAULT_NOTIF_SETTINGS.hour;
+    await AsyncStorage.setItem(
+      NOTIF_SETTINGS_KEY,
+      JSON.stringify({ enabled: !!enabled, hour: safeHour }),
+    );
+  } catch (_) {}
+}
+
+export async function getNotificationSettings(): Promise<{ enabled: boolean; hour: number }> {
+  try {
+    const raw = await AsyncStorage.getItem(NOTIF_SETTINGS_KEY);
+    if (!raw) return DEFAULT_NOTIF_SETTINGS;
+    const parsed = JSON.parse(raw);
+    return {
+      enabled: typeof parsed?.enabled === 'boolean' ? parsed.enabled : DEFAULT_NOTIF_SETTINGS.enabled,
+      hour: typeof parsed?.hour === 'number' && Number.isFinite(parsed.hour) ? parsed.hour : DEFAULT_NOTIF_SETTINGS.hour,
+    };
+  } catch (_) {
+    return DEFAULT_NOTIF_SETTINGS;
+  }
+}
+
 /**
  * expo-notifications throws at import time in Expo Go on Android (SDK 53+)
  * because remote push notifications were removed from the sandbox. We safely
  * require it at runtime and no-op every function when the module is absent,
  * so the rest of the app continues to load.
  */
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let Notifications: any = null;
@@ -35,12 +69,6 @@ export const NOTIFICATION_MESSAGES = [
   'Begin again. The present moment is always the right moment.',
 ];
 
-/** AsyncStorage key for persisted notification settings. */
-export const NOTIF_SETTINGS_KEY = 'wildflower_notif_settings';
-
-/** AsyncStorage key tracking whether we have shown the first-reading prompt. */
-export const NOTIF_PROMPTED_KEY = 'wildflower_notif_prompted';
-
 const NOTIFICATIONS_ENABLED = true;
 
 // Configure handler once if the module is available.
@@ -55,25 +83,6 @@ if (Notifications) {
       }),
     });
   } catch (_) {}
-}
-
-/** Persist notification on/off + hour to AsyncStorage. */
-export async function saveNotificationSettings(enabled: boolean, hour: number): Promise<void> {
-  try {
-    await AsyncStorage.setItem(NOTIF_SETTINGS_KEY, JSON.stringify({ enabled, hour, minute: 0 }));
-  } catch (_) {}
-}
-
-/** Load persisted settings, defaulting to enabled at 18:00. */
-export async function getNotificationSettings(): Promise<{ enabled: boolean; hour: number }> {
-  try {
-    const raw = await AsyncStorage.getItem(NOTIF_SETTINGS_KEY);
-    if (raw) {
-      const s = JSON.parse(raw);
-      return { enabled: s.enabled ?? true, hour: s.hour ?? 18 };
-    }
-  } catch (_) {}
-  return { enabled: true, hour: 18 };
 }
 
 export async function requestNotificationPermission(): Promise<boolean> {
@@ -108,13 +117,9 @@ export async function scheduleDailyNotification(hour: number, minute: number): P
     await Notifications.scheduleNotificationAsync({
       content: { title: 'Wildflower \u2736', body },
       trigger: {
-        // CALENDAR trigger fires at the exact clock time each day (HH:MM:00),
-        // unlike DAILY which schedules relative intervals and can drift by minutes.
-        type: Notifications.SchedulableTriggerInputTypes?.CALENDAR ?? 'calendar',
-        repeats: true,
+        type: Notifications.SchedulableTriggerInputTypes?.DAILY ?? 'daily',
         hour,
         minute,
-        second: 0,
         ...(Platform.OS === 'android' ? { channelId: 'daily-reminder' } : {}),
       },
     });
